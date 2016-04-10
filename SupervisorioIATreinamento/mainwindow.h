@@ -23,6 +23,10 @@ class MainWindow : public QMainWindow
     QLabel * _labelAmostraTreinamento;
     QLabel * _labelSaidaDesejada;
     QLabel * _labelGuardarPesos;
+    QLabel * _labelMomentum;
+    QLabel * _labelfuncao;
+   // QLabel * _labelLogistica;
+    //QLabel * _labelTangenteHiperbolica;
 
     QLineEdit * _lineEditNumeroEpocas;
     QLineEdit * _lineEditPrecisao;
@@ -30,12 +34,16 @@ class MainWindow : public QMainWindow
     QLineEdit * _lineEditAmostraTreinamento;
     QLineEdit * _lineEditSaidaDesejada;
     QLineEdit * _lineEditGuardarPesos;
+    QLineEdit * _lineEditMomentum;
+    QCheckBox * _CB_funcaoTH;
+    QCheckBox * _CB_funcaoL;
 
     QPushButton * _buttonSelecionarArquivoAmostas;
     QPushButton * _buttonSelecionarArquivoSaidas;
     QPushButton * _buttonSelecionarDiretorioGuardarPesos;
     QPushButton * _buttonIniciarTreinamento;
     QPushButton * _buttonGuardarPesos;
+    QPushButton * _buttonMomentum;
 
     QGridLayout * _layoutForm;
 

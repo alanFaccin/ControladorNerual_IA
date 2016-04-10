@@ -14,7 +14,7 @@
 #define WINDOW_HEIGHT 600
 
 #define NUM_ENTRADAS 1
-#define NUM_NEURONIOS_CAMADA_UM 10
+#define NUM_NEURONIOS_CAMADA_UM 15
 #define NUM_NEURONIOS_CAMADA_DOIS 5
 
 
@@ -28,10 +28,6 @@ double w2[NUM_NEURONIOS_CAMADA_DOIS*NUM_NEURONIOS_CAMADA_UM];
 //Delta PESOS
 double dw1[NUM_NEURONIOS_CAMADA_UM*NUM_ENTRADAS];
 double dw2[NUM_NEURONIOS_CAMADA_DOIS*NUM_NEURONIOS_CAMADA_UM];
-
-//NET
-double net1[NUM_NEURONIOS_CAMADA_UM] = {0};
-double net2[NUM_NEURONIOS_CAMADA_DOIS] = {0};
 
 //Entradas
 double Entrada_I1[NUM_NEURONIOS_CAMADA_UM] = {0};
@@ -76,6 +72,17 @@ MainWindow::MainWindow()
     this->_lineEditTaxaAprendizado = new QLineEdit(this->_widget);
     this->_lineEditTaxaAprendizado->setText(QString::fromUtf8("0.01"));
 
+    this->_labelMomentum = new QLabel(QString::fromUtf8("Momentum"), this->_widget);
+    this->_lineEditMomentum = new QLineEdit(this->_widget);
+    this->_lineEditMomentum->setText(QString::fromUtf8("0.99"));
+
+    this->_labelfuncao = new QLabel(QString::fromUtf8("Função"), this->_widget);
+   // this->_labelLogistica = new QLabel(QString::fromUtf8("Logística"), this->_widget);
+   //this->_labelTangenteHiperbolica = new QLabel(QString::fromUtf8("T. Hiperbólica"), this->_widget);
+    this->_CB_funcaoL = new QCheckBox("Logística",this->_widget);
+    this->_CB_funcaoTH = new QCheckBox("T. Hiperbólica",this->_widget);
+    this->_CB_funcaoL->setChecked(true);
+
     this->_labelAmostraTreinamento = new QLabel(QString::fromUtf8("Amostras para treinamento"), this->_widget);
     this->_lineEditAmostraTreinamento = new QLineEdit(this->_widget);
     this->_lineEditAmostraTreinamento->setEnabled(false);
@@ -103,19 +110,26 @@ MainWindow::MainWindow()
     this->_layoutForm->addWidget(this->_lineEditPrecisao, 0, 3);
     this->_layoutForm->addWidget(this->_labelTaxaAprendizado, 0, 4);
     this->_layoutForm->addWidget(this->_lineEditTaxaAprendizado, 0, 5);
+    this->_layoutForm->addWidget(this->_labelMomentum, 0, 6);
+    this->_layoutForm->addWidget(this->_lineEditMomentum, 0, 7);
+    this->_layoutForm->addWidget(this->_labelfuncao, 0, 8);
+    //this->_layoutForm->addWidget(this->_labelLogistica, 1, 9);
+    this->_layoutForm->addWidget(this->_CB_funcaoL,1,8);
+    //this->_layoutForm->addWidget(this->_labelTangenteHiperbolica, 2, 9);
+    this->_layoutForm->addWidget(this->_CB_funcaoTH,2,8);
 
     this->_layoutForm->addWidget(this->_labelAmostraTreinamento, 1, 0);
-    this->_layoutForm->addWidget(this->_lineEditAmostraTreinamento, 1, 1, 1, 4);
-    this->_layoutForm->addWidget(this->_buttonSelecionarArquivoAmostas, 1, 5);
+    this->_layoutForm->addWidget(this->_lineEditAmostraTreinamento, 1, 1, 1, 6);
+    this->_layoutForm->addWidget(this->_buttonSelecionarArquivoAmostas, 1, 7);
 
     this->_layoutForm->addWidget(this->_labelSaidaDesejada, 2, 0);
-    this->_layoutForm->addWidget(this->_lineEditSaidaDesejada, 2, 1, 1, 4);
-    this->_layoutForm->addWidget(this->_buttonSelecionarArquivoSaidas, 2, 5);
+    this->_layoutForm->addWidget(this->_lineEditSaidaDesejada, 2, 1, 1, 6);
+    this->_layoutForm->addWidget(this->_buttonSelecionarArquivoSaidas, 2, 7);
 
 
     this->_layoutForm->addWidget(this->_labelGuardarPesos, 3, 0);
-    this->_layoutForm->addWidget(this->_lineEditGuardarPesos, 3, 1, 1, 4);
-    this->_layoutForm->addWidget(this->_buttonSelecionarDiretorioGuardarPesos, 3, 5);
+    this->_layoutForm->addWidget(this->_lineEditGuardarPesos, 3, 1, 1, 6);
+    this->_layoutForm->addWidget(this->_buttonSelecionarDiretorioGuardarPesos, 3, 7);
 
     this->_layoutForm->addWidget(this->_buttonIniciarTreinamento, 4, 0);
     this->_layoutForm->addWidget(this->_buttonGuardarPesos, 4, 1);
@@ -125,7 +139,7 @@ MainWindow::MainWindow()
     this->_chart = new QCustomPlot(this->_widget);
     this->_chart->setGeometry(QRect(0, 0, 800, 500));
     this->_chart->addGraph();
-    this->_chart->xAxis->setLabel("ÉPOCA");
+    this->_chart->xAxis->setLabel("CONTAGEM DAS ÉPOCAS");
     this->_chart->yAxis->setLabel("ERRO");
     this->_chart->xAxis->setRange(-1, 1);
     this->_chart->yAxis->setRange(0, 1);
@@ -259,7 +273,7 @@ double MainWindow::derivada(double net, int funcao, double a)
 | Funcao para dar um reset nos arrays dos pesos da camada 1 (PesosCamada1) e da camada 2 (PesosCamada2)
 |--------------------------------------------------------------------------------
 */
-void zeraPesos(int camada){
+void MainWindow::zeraPesos(int camada){
     // Zera os pesos da camada de entrada (input) e da camada 1
     if (camada ==1) {
         for (int j = 0; j < (NUM_NEURONIOS_CAMADA_UM*NUM_ENTRADAS); j++)
@@ -282,7 +296,7 @@ void zeraPesos(int camada){
 | Funcao responsavel por dar um reset nos vetores que ennvolvem os neoronios da camada 1  e da camada 2
 |--------------------------------------------------------------------------------
 */
-void zeraVetoresNeuronios(int camada){
+void MainWindow::zeraVetoresNeuronios(int camada){
 
     if (camada ==1) {
         // Zera os vetores envolvidos aos neuronios da camada 1.
@@ -311,7 +325,7 @@ void zeraVetoresNeuronios(int camada){
 |Funcao responsavel por randomizar os pesos iniciais de cada camada
 |--------------------------------------------------------------------------------
 */
-void randomizaPesos(int camada){
+void MainWindow:: randomizaPesos(int camada){
 
     if (camada ==1) {
         // Randomiza os pesos para a camada 1.
@@ -389,6 +403,7 @@ void MainWindow::slotIniciarTreinamento()
     this->_buttonSelecionarArquivoAmostas->setEnabled(false);
     this->_buttonSelecionarArquivoSaidas->setEnabled(false);
     this->_buttonIniciarTreinamento->setEnabled(false);
+    this->_lineEditMomentum->setEnabled(false);
 
     /*
 |--------------------------------------------------------------------------------
@@ -450,94 +465,123 @@ void MainWindow::slotIniciarTreinamento()
     double precisao = this->_lineEditPrecisao->text().toDouble(); // pega precisao informada na interface
     double aprendizado = this->_lineEditTaxaAprendizado->text().toDouble(); // pega a taxa de aprendizado infomada da interface
     int numepocas = this->_lineEditNumeroEpocas->text().toInt(); // pega o numero de épocas informada na interaface
+    double MOMENTUM = this->_lineEditMomentum->text().toDouble();           // Termo de momentum.
 
     QVector<double> gepocas(numepocas), gerro(numepocas);// vetores que guardam a epoca e seu respectivo erro
 
     int epocas = 0;
-    double erro_quadradico_medio_atual = 0;
-    double erro_quadradico_medio_anterior = 0;
-
     double erro_medio_quadratico= 0;
     double erro_quadratico = 0;
     double somatorio = 0;
-    int funcao = 1; //hiperbolica
+    int funcao = 0;
+
+    if(this->_CB_funcaoL->isChecked()){
+        funcao = 0;
+        this->_CB_funcaoTH->setChecked(false);
+    }
+    if(this->_CB_funcaoTH->isChecked()){
+        funcao = 1;
+        this->_CB_funcaoL->setChecked(false);
+    }
+
+
+
+    zeraPesos(1);
+    zeraPesos(2);
+
+    zeraVetoresNeuronios(1);
+    zeraVetoresNeuronios(2);
+
+    randomizaPesos(1);
+    randomizaPesos(2);
+
+
+
+
+    // pesos randomizados para a camada 1.
+    qDebug()  <<" pesos randomizados para a camada 1";
+    for (int j = 0; j < (NUM_NEURONIOS_CAMADA_UM*NUM_ENTRADAS); j++)
+    {
+        qDebug() <<w1[j] ;
+    }
+
+
+    // pesos randomizados para a camada 2.
+    qDebug()  <<" pesos randomizados para a camada 2";
+    for (int j = 0; j < (NUM_NEURONIOS_CAMADA_DOIS*NUM_NEURONIOS_CAMADA_UM); j++)
+    {
+        qDebug() <<w2[j] ;
+    }
+
+
+    qDebug()  <<"**************************** Inico Treinamento ****************************";
 
     do{
-        /*
-        |--------------------------------------------------------------------------------
-        | Forward
-        |--------------------------------------------------------------------------------
-        */
-        erro_quadradico_medio_anterior = erro_quadradico_medio_atual;
-        for(int a = 0; a < amostras_treinamento.size(); a++) {// percorre a quantidade de padroes que serao passados para a rede
 
-            //Calculo das entradas e saidas da Camada1 (exemplo de calculo na pagina 98 livro)
+        // Propaga os k padrıes pela rede.
+        for (int k = 0; k < amostras_treinamento.size(); k++)
+        {
+            //C·lculo para camada C1.
             int n = 0;
             for (int j = 0; j < NUM_NEURONIOS_CAMADA_UM; j++)
             {
                 somatorio = 0;
                 for (int i = 0; i < NUM_ENTRADAS; i++)
                 {
-                    somatorio += w1[n] * amostras_treinamento.at(i); // somatorio (peso * padores de entrada)
-                    n ++;
+                    somatorio += w1[n] * amostras_treinamento.at(k);
+                    n += 1;
                 }
-                Entrada_I1[j] = somatorio; // entrada da camada 1 é o somatorio (peso * padores de entrada) da camada de entrada (input)
-                saida_y1[j] = FuncaoAtivacao(Entrada_I1[j],funcao,1.0); //utilizando a funcao da tangente hiperbolica das entradas calculadas acima para calculo da saida da camada 1
+                Entrada_I1[j] = somatorio;
+                saida_y1[j] = FuncaoAtivacao(Entrada_I1[j],funcao,1.0);
             }
 
-            //Calculo das eentradas e saidas da Camada2  (exemplo na pagina 98 livro)
+            //C·lculo para camada C2.
             n = 0;
             for (int j = 0; j < NUM_NEURONIOS_CAMADA_DOIS; j++)
             {
                 somatorio = 0;
                 for (int i = 0; i < NUM_NEURONIOS_CAMADA_UM; i++)
                 {
-                    somatorio += w2[n] * saida_y1[i]; // somatorio (pesos da camada 2 * saida da camada 1)
-                    n++;
+                    somatorio += w2[n] * saida_y1[i];
+                    n += 1;
                 }
-                Entrada_I2[j] = somatorio; // entrada da camada 2 é somatorio calculado acima
-                saida_y2[j] = FuncaoAtivacao(Entrada_I2[j],funcao,1.0); //utilizando a funcao da tangete hiperbolica das entradas calculadas acima para calculo da saida da camada 2
-
+                Entrada_I2[j] = somatorio;
+                saida_y2[j] = FuncaoAtivacao(Entrada_I2[j],funcao,1.0);
             }
 
+            //********************* C·lculo do Erro MÈdio Quadr·tico ************************
 
             //Calculo do Erro Quadratico.
             erro_quadratico = 0;
             for(int j = 0; j < NUM_NEURONIOS_CAMADA_DOIS; j++)
             {
-                erro_quadratico += pow((saidas_desejada[a][j] - saida_y2[j]),2);
+                erro_quadratico += pow((saidas_desejada[k][j] - saida_y2[j]),2);
             }
 
-            //Calculo do Erro Medio Quadratico (Utilizado como Criterio de Parada).
+            //Calculo do Erro Medio Quadratico (Criterio de Parada).
             erro_medio_quadratico += (0.5 * erro_quadratico);
 
-            /*
-            |--------------------------------------------------------------------------------
-            | Backward
-            |--------------------------------------------------------------------------------
-            */
 
+            //**************************** Retropropagacao do Erro **************************
 
-            //**************************** Ajustes pesos sinapticos da camada de saída **************************
-            //Calculo do erro para camada 2 (exemplo do calculo na pagina 101 livro 5.15)
+            //Calculo do erro para camada 2.
             for (int i = 0; i < NUM_NEURONIOS_CAMADA_DOIS; i++)
             {
-                erro_camada2[i] = (saidas_desejada[a][i] - saida_y2[i]) * derivada(Entrada_I2[i],funcao,1.0);
+                erro_camada2[i] = (saidas_desejada[k][i] - saida_y2[i]) * derivada(Entrada_I2[i],funcao,1.0);
             }
 
-            //Atualizacao dos pesos para camada 2 (exemplo na pagina 101 livro 5.14)
+            //Atualizacao dos pesos para camada 2.
             for (int i = 0; i < NUM_NEURONIOS_CAMADA_UM; i++)
             {
                 n = 0;
                 for (int j = 0; j < NUM_NEURONIOS_CAMADA_DOIS; j++)
                 {
-                    dw2[n + i] = aprendizado * saida_y1[i] * erro_camada2[j];
-                    w2[n + i] += dw2[n + i]; //(5.16 livro)
+                    dw2[n + i] = aprendizado * saida_y1[i] * erro_camada2[j] + (MOMENTUM * dw2[n + i]);
+                    w2[n + i] = w2[n + i] + dw2[n + i];
                     n += NUM_NEURONIOS_CAMADA_UM;
                 }
             }
 
-            //**************************** Ajustes pesos sinapticos das camadas intermediárias **************************
             //Calculo do erro para camada 1.
             for (int i = 0; i < NUM_NEURONIOS_CAMADA_UM; i++)
             {
@@ -557,43 +601,41 @@ void MainWindow::slotIniciarTreinamento()
                 n = 0;
                 for (int j = 0; j < NUM_NEURONIOS_CAMADA_UM; j++)
                 {
-                    dw1[n + i] = aprendizado * amostras_treinamento.at(a) * erro_camada1[j];
-                    w1[n + i] += dw1[n + i];
+                    dw1[n + i] = aprendizado * amostras_treinamento.at(k) * erro_camada1[j] + (MOMENTUM * dw1[n + i]);
+                    w1[n + i] = w1[n + i] + dw1[n + i];
                     n += NUM_ENTRADAS;
                 }
             }
-
-
-            // Calculo do erro médio quadrático da Época de treinamento.
-            erro_medio_quadratico = (1.0 / amostras_treinamento.size()) * erro_medio_quadratico;
-
-
-            gerro.append(erro_quadradico_medio_atual);
-            gepocas.append(epocas);
-
-            epocas++;
-
-            qDebug() << epocas + erro_medio_quadratico;
-            //qDebug() << epocas;
-
-            erro_medio_quadratico = 0;
-
         }
 
-    } while(epocas < numepocas);//fabs(erro_quadradico_medio_atual - erro_quadradico_medio_anterior) >= precisao &&
+        // C·lculo do erro mÈdio quadr·tico da Època de treinamento.
+        erro_medio_quadratico = (1.0 / amostras_treinamento.size()) * erro_medio_quadratico;
 
+        gerro.append(erro_medio_quadratico);
+        gepocas.append(epocas);
+
+        epocas++;
+
+       // qDebug() << erro_medio_quadratico;
+        //qDebug() << epocas;
+
+        erro_medio_quadratico = 0;
+
+
+    } while(epocas < numepocas ||erro_medio_quadratico >= precisao);
+    qDebug()  <<"**************************** Fim Treinamento ****************************";
     /*
 |--------------------------------------------------------------------------------
 | Gráfico
 |--------------------------------------------------------------------------------
 */
 
-        this->_chart->graph(0)->setData(gepocas, gerro);
-        this->_chart->xAxis->setLabel("ÉPOCA");
-        this->_chart->yAxis->setLabel("ERRO");
-        this->_chart->xAxis->setRange(0, numepocas);
-        this->_chart->yAxis->setRange(0, 1.5);
-        this->_chart->replot();
+    this->_chart->graph(0)->setData(gepocas, gerro);
+    this->_chart->xAxis->setLabel("CONTAGEM DAS ÉPOCAS");
+    this->_chart->yAxis->setLabel("ERRO");
+    this->_chart->xAxis->setRange(0, numepocas);
+    this->_chart->yAxis->setRange(0, 1.5);
+    this->_chart->replot();
 
     /*
 |--------------------------------------------------------------------------------
@@ -609,6 +651,8 @@ void MainWindow::slotIniciarTreinamento()
     this->_buttonSelecionarArquivoSaidas->setEnabled(true);
     this->_buttonIniciarTreinamento->setEnabled(true);
     this->_buttonGuardarPesos->setEnabled(true);
+    this->_lineEditMomentum->setEnabled(true);
+
 }
 
 
@@ -619,44 +663,32 @@ void MainWindow::slotIniciarTreinamento()
 */
 void MainWindow::slotGuardarPesos()
 {
-    //    QFile pesos(this->_lineEditGuardarPesos->text());
+    QFile pesos(this->_lineEditGuardarPesos->text());
 
-    //    if(!pesos.open(QIODevice::ReadWrite)) {
-    //        qDebug() << pesos.errorString();
-    //        exit(0);
-    //    }
+    if(!pesos.open(QIODevice::ReadWrite)) {
+        qDebug() << pesos.errorString();
+        exit(0);
+    }
 
-    //    QTextStream in_p(&pesos);
+    QTextStream in_p(&pesos);
 
-    //    in_p.operator <<("W1:");
-    //    for(int i = 0; i < NUM_NEURONIOS_CAMADA_UM; i++) {
-    //        in_p.operator << ("{");
-    //        for(int j = 0; j < NUM_ENTRADAS; j++) {
-    //            in_p.operator << (w1[i][j]);
-    //            in_p.operator << (",");
-    //        }
-    //        in_p.operator << ("}, ");
-    //    }
+    in_p.operator <<("W1(Pesos Camada 1):");
+    in_p.operator << ("{");
+    for(int i = 0; i < NUM_NEURONIOS_CAMADA_UM * NUM_ENTRADAS; i++) {
+        in_p.operator << (w1[i]);
+        in_p.operator << (",");
+    }
+    in_p.operator << ("}, ");
+    in_p.operator <<("\n");
 
-    //    in_p.operator <<("W2:");
-    //    for(int i = 0; i < NUM_NEURONIOS_CAMADA_DOIS; i++) {
-    //        in_p.operator << ("{");
-    //        for(int j = 0; j < NUM_NEURONIOS_CAMADA_UM + 1; j++) {
-    //            in_p.operator << (w2[i][j]);
-    //            in_p.operator << (",");
-    //        }
-    //        in_p.operator << ("}, ");
-    //    }
+    in_p.operator <<("W2 (Pesos Camada 2):");
+    in_p.operator << ("{");
+    for(int i = 0; i < NUM_NEURONIOS_CAMADA_UM * NUM_NEURONIOS_CAMADA_DOIS; i++) {
+        in_p.operator << (w2[i]);
+        in_p.operator << (",");
+    }
+    in_p.operator << ("}, ");
+    in_p.operator <<("\n");
 
-    //    in_p.operator <<("W3:");
-    //    for(int i = 0; i < NUM_NEURONIOS_CAMADA_TRES; i++) {
-    //        in_p.operator << ("{");
-    //        for(int j = 0; j < NUM_NEURONIOS_CAMADA_DOIS + 1; j++) {
-    //            in_p.operator << (w3[i][j]);
-    //            in_p.operator << (",");
-    //        }
-    //        in_p.operator << ("}, ");
-    //    }
-
-    //    pesos.close();
+    pesos.close();
 }
