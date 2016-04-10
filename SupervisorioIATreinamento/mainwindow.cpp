@@ -484,8 +484,6 @@ void MainWindow::slotIniciarTreinamento()
         this->_CB_funcaoL->setChecked(false);
     }
 
-
-
     zeraPesos(1);
     zeraPesos(2);
 
