@@ -109,6 +109,16 @@ namespace SupervisorioIA
                     string trat = this.rxString;
                     trat = trat.Remove(0, 15);
                     this.label_said.Text = trat;
+
+                    //se for a saida ideal 
+                    if (trat == " 1 | 1 | 0 | 1 | 1\r")
+                    {
+                        this.label_said.ForeColor = System.Drawing.Color.Green;
+                    }else
+                    {
+                        this.label_said.ForeColor = System.Drawing.Color.Black;
+                    }
+
                     // Ajusta label Atuadores bomba 1 
                     if (trat.Substring(1, 1) == "0")
                     {
